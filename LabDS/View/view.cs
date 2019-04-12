@@ -2,10 +2,12 @@
 using System.Drawing;
 using System.Windows.Forms;
 using System.IO.Ports;
+using LabDS.Model;
 using ZedGraph;
 
 namespace LabDS.View
 {
+    
     public partial class Janela: Form
     {
         //instancia objetos das classes da API Zedgraph
@@ -17,18 +19,25 @@ namespace LabDS.View
         LineItem myLinePress;
         //criar evento para informar os subscritores que houve um click no botão iniciar
         public event EventHandler OnIniciar = null;
+
         //criar evento para informar os subscritores que houve um click no botão terminar
         public event EventHandler OnTerminarDAQ = null;
+
         //criar evento para informar os subscritores que houve uma seleção de COM
         public event EventHandler OnSelectCOM = null;
+
         //criar evento para informar os subscritores que houve uma seleção de COM
         public event EventHandler OnSelectBaudRate = null;
+
         //criar evento para informar os subscritores que houve uma seleção de COM
         public event EventHandler OnIniciarDAQ = null;
+
         //criar evento para informar os subscritores que houve uma alteração no setpoint
         public event EventHandler OnSetPoint = null;
+
         //criar evento para informar os sbscritores que houve um click no botão SAIR
         public event EventHandler OnSair = null;
+
         //iniciar a consola
         public Janela()
         {
@@ -49,7 +58,6 @@ namespace LabDS.View
             TempGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
             myLineTemp = TempGraph.AddCurve(null, listPointsTemp, Color.Red, SymbolType.Square);
             myLineTemp.Line.Width = 1;
-            //myLineTemp.Line.Fill = new Fill(Color.White, Color.Red, 45F);
         }
 
         //método invocado na criação da consola para desenhar o gráfico de pressão
@@ -64,10 +72,9 @@ namespace LabDS.View
             PressGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
             myLinePress = PressGraph.AddCurve(null, listPointsPress, Color.Red, SymbolType.Square);
             myLinePress.Line.Width = 1;
-            //myLinePress.Line.Fill = new Fill(Color.White, Color.Red, 45F);
         }
 
-        //método invocado pelo controller para atualizar o gráfico de temperatura
+        //método invocado pelo Controller para atualizar o gráfico de temperatura
         public void UpdateGraphTemp(double time, string temp)
         {
             listPointsTemp.Add(new PointPair(time, Convert.ToDouble(temp)));
@@ -75,7 +82,7 @@ namespace LabDS.View
             TempGraph.AxisChange();
         }
 
-        //método invocado pelo controller para atualizar o gráfico de pressão
+        //método invocado pelo Controller para atualizar o gráfico de pressão
         public void UpdateGraphPress(double time, string press)
         {
             listPointsPress.Add(new PointPair(time, Convert.ToDouble(press)));
@@ -83,7 +90,7 @@ namespace LabDS.View
             PressGraph.AxisChange();
         }
 
-        //método que lança o evento da view de click no botão Iniciar
+        //método que lança o evento da View de click no botão Iniciar
         private void Iniciar_Click(object sender, EventArgs e)
         {
             iniciar.Enabled = false;
@@ -91,7 +98,7 @@ namespace LabDS.View
             OnIniciar?.Invoke(sender, e);
         }
 
-        //método que lança o evento da view de click no botão iniciar receção de dados
+        //método que lança o evento da View de click no botão iniciar receção de dados
         private void IniciarDAQ_Click(object sender, EventArgs e)
         {
             iniciarDAQ.Enabled = false;
@@ -99,7 +106,7 @@ namespace LabDS.View
             OnIniciarDAQ?.Invoke(sender, e);
         }
 
-        //método que lança o evento da view de click no botão terminar
+        //método que lança o evento da View de click no botão terminar
         private void TerminarDAQ_Click(object sender, EventArgs e)
         {
             iniciarDAQ.Enabled = true;
@@ -107,27 +114,143 @@ namespace LabDS.View
             OnTerminarDAQ?.Invoke(sender, e);
         }
 
-        //método que lança o evento da view de seleção do baud rate
+        //método que lança o evento da View de seleção do baud rate
         private void OnSelectBaudRateEvent(object sender, EventArgs e)
         {
             OnSelectBaudRate?.Invoke(sender, e);
         }
 
-        //método que lança o evento da view de seleção da porta COM
+        //método que lança o evento da View de seleção da porta COM
         private void Com_box_SelectedIndexChanged(object sender, EventArgs e)
         {
             OnSelectCOM?.Invoke(sender, e);
         }
 
-        //método que lança o evento da view de alteração do setpoint
+        //método que lança o evento da View de alteração do setpoint
         private void Setpoint_ValueChanged(object sender, EventArgs e)
         {
             OnSetPoint?.Invoke(sender, e);
         }
-        //método que lança o evento da view de click no botão SAIR
+
+        //método que lança o evento da View de click no botão SAIR
         private void Terminated_Click(object sender, EventArgs e)
         {
             OnSair?.Invoke(sender, e);
+        }
+
+        //método invocado quando há um evento lançado pelo Model (novo par de pontos)
+        public void UpdateView(object o, ParsedStringEventArgs e)
+        {
+            ShowTemp(e.NewStringParsed[0]); 
+            ShowPress(e.NewStringParsed[1]);
+            TempPlot(e.NewStringParsed[2], e.NewStringParsed[0]); //atualiza o gráfico na View
+            PressPlot(e.NewStringParsed[2], e.NewStringParsed[1]); //atualiza o gráfico na View
+        }
+
+        //método chamado aquando do evento do Model de alarme (temperatura>setpoint)
+        public void Alarm(object sender, EventArgs e)
+        {
+            UpdateAlarm();
+        }
+
+        //método chamado aquando do evento do Model de fim de alarme
+        public void NoAlarm(object sender, EventArgs e)
+        {
+            UpdateNoAlarm();
+        }
+
+        //delegado e método de callback para assinalar temperatura normal
+        delegate void ShowNorm();
+        private void UpdateNoAlarm()
+        {
+            if (alarmBox.InvokeRequired)
+            {
+                ShowNorm n = new ShowNorm(UpdateNoAlarm);
+                alarmBox.Invoke(n, new object[] { });
+            }
+            else
+            {
+                alarmBox.BackColor = Color.White;
+                alarmBox.Text = "";
+            }
+        }
+
+        //delegado e método de callback para assinalar informação de ALARME de temperatura
+        delegate void ShowAlarm();
+        private void UpdateAlarm()
+        {
+            if (alarmBox.InvokeRequired)
+            {
+                ShowAlarm a = new ShowAlarm(UpdateAlarm);
+                alarmBox.Invoke(a, new object[] { });
+            }
+            else
+            {
+                alarmBox.BackColor = Color.Red;
+                alarmBox.ForeColor = Color.White;
+                alarmBox.Font = new Font("Georgia", 16, FontStyle.Bold);
+                alarmBox.Text = "ALARME! TEMPERATURA EXCESSIVA";
+            }
+        }
+
+        //delegado e método de callback para atualizar a temperatura na View
+        delegate void UpdateTempBox(string temp);
+        private void ShowTemp(string temp)
+        {
+            if (textBoxTemp.InvokeRequired)
+            {
+                UpdateTempBox t = new UpdateTempBox(ShowTemp);
+                textBoxTemp.Invoke(t, new Object[] { temp});
+            }
+            else
+            {
+                textBoxTemp.Text = temp;
+            }
+        }
+
+        //delegado e método de callback para atualizar a pressão na View
+        delegate void UpdatePressBox(string press);
+        private void ShowPress(string press)
+        {
+            if (textBoxPress.InvokeRequired)
+            {
+                UpdatePressBox p = new UpdatePressBox(ShowPress);
+                textBoxPress.Invoke(p, new Object[] { press });
+            }
+            else
+                textBoxPress.Text = press;
+        }
+
+        //delegado e método de callback para atualizar o gráfico da temperatura na View
+        delegate void UpdateTempGraph(string x, string temp);
+        private void TempPlot(string x, string temp)
+        {
+            if (tempGrph.InvokeRequired)
+            {
+                UpdateTempGraph t = new UpdateTempGraph(TempPlot);
+                tempGrph.Invoke(t, new Object[] {x,temp});
+            }
+            else
+            {
+                UpdateGraphTemp(Convert.ToDouble(x), temp); //envia novo ponto para a View  atualizar o gráfico
+                tempGrph.Refresh();
+            }
+        }
+
+        //delegado e método de callback para atualizar o gráfico da pressão na View
+        delegate void UpdatePressGraph(string x, string press);
+        private void PressPlot(string x, string press)
+        {
+            if (pressGrph.InvokeRequired)
+            {
+                UpdatePressGraph p = new UpdatePressGraph(PressPlot);
+                pressGrph.Invoke(p, new Object[] {x,press}); 
+            }
+            else
+            {
+                UpdateGraphPress(Convert.ToDouble(x), press); //envia novo ponto para a View atualizar o gráfico
+                pressGrph.Refresh();
+            }
         }
     }
 }
