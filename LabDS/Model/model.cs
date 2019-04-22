@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace LabDS.Model
-{ 
+namespace LabDS.Model   
+{
     public class ParsedStringEventArgs : EventArgs
     {
         public string[] NewStringParsed { get; set; }
@@ -26,7 +26,7 @@ namespace LabDS.Model
         private string dataReceived;
         private string[] availableCOMS;
         private string selectedCOM;
-        private string selectedBaudRate;
+        private string selectedBaudRate = " ";
         private int index;
         private string temp;
         private string press;
@@ -96,19 +96,36 @@ namespace LabDS.Model
             set { x = value; }
         }
 
+        //método para verificar se o vetor de portas COM está vazio
+        public void ChkAvailableCOMs(string[] avcoms)
+        {
+            if (avcoms.Length != 0)
+            {
+                AvailableCOMS = avcoms;
+            }
+        }
+
         //método para processar a string de dados
         public void ParseDados(string dadosRaw)
         {
-            string[] dados = dadosRaw.Split(';');
-            Temp = dados[1];
-            Press = dados[2];
-            //após processar cada string lança evento para informar a View, através do
-            //Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x
-            OnNewStringParsed(Temp, Press, Convert.ToString(X));
-            //atualizar próximo valor de x (tempo)
-            X += 0.05; 
-            //verificar o estado do alarme e informar a View, através do Controller
-            ChkAlarm(Temp);
+            try
+            {
+                string[] dados = dadosRaw.Split(';');
+                Temp = dados[1];
+                Press = dados[2];
+                //após processar cada string lança evento para informar a View, através do
+                //Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x
+                OnNewStringParsed(Temp, Press, Convert.ToString(X));
+                //atualizar próximo valor de x (tempo)
+                X += 0.05;
+                //verificar o estado do alarme e informar a View, através do Controller
+                ChkAlarm(Temp);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                //apanha exceção no Model e alertar o Controller que vai ativar caixa de dialogo na View)
+                throw new ModelException();
+            }
         }
 
         //método que lança evento de nova string 
@@ -132,5 +149,14 @@ namespace LabDS.Model
             }
         }
     }
+        //classe que notifica o Controller das exceções apanhadas pelo Model
+        public class ModelException : Exception
+        {
+            public ModelException()
+            {
+                //construtor
+            }
+        }
+    
 }
  

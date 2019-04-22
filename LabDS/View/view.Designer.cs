@@ -94,11 +94,11 @@ namespace LabDS.View
             // 
             // iniciar
             // 
-            this.iniciar.Location = new System.Drawing.Point(10, 87);
+            this.iniciar.Location = new System.Drawing.Point(12, 84);
             this.iniciar.Name = "iniciar";
-            this.iniciar.Size = new System.Drawing.Size(75, 23);
+            this.iniciar.Size = new System.Drawing.Size(187, 23);
             this.iniciar.TabIndex = 4;
-            this.iniciar.Text = "INICIAR";
+            this.iniciar.Text = "Obter COM\'s disponíveis";
             this.iniciar.UseVisualStyleBackColor = true;
             this.iniciar.Click += new System.EventHandler(this.Iniciar_Click);
             // 
@@ -118,6 +118,7 @@ namespace LabDS.View
             this.baud_box.Name = "baud_box";
             this.baud_box.Size = new System.Drawing.Size(130, 21);
             this.baud_box.TabIndex = 0;
+            this.baud_box.Text = "9600";
             this.baud_box.SelectedIndexChanged += new System.EventHandler(this.OnSelectBaudRateEvent);
             // 
             // terminarDAQ
@@ -310,12 +311,9 @@ namespace LabDS.View
 
         #endregion
         private System.Windows.Forms.GroupBox groupBox1;
-        private System.Windows.Forms.Button iniciar;
-        private System.Windows.Forms.Button terminarDAQ;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.GroupBox sensor_control;
-        private System.Windows.Forms.Button iniciarDAQ;
         public System.Windows.Forms.ComboBox com_box;
         public System.Windows.Forms.ComboBox baud_box;
         public System.Windows.Forms.TextBox textBoxTemp;
@@ -331,5 +329,8 @@ namespace LabDS.View
         public System.Windows.Forms.TextBox reportBox;
         public System.Windows.Forms.Button button1;
         private System.Windows.Forms.GroupBox groupBox2;
+        public System.Windows.Forms.Button iniciar;
+        public System.Windows.Forms.Button terminarDAQ;
+        public System.Windows.Forms.Button iniciarDAQ;
     }
 }

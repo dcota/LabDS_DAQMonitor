@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Drawing;
 using System.Windows.Forms;
-using System.IO.Ports;
 using LabDS.Model;
 using ZedGraph;
+using LabDS.View;
 
 namespace LabDS.View
 {
-    
     public partial class Janela: Form
     {
         //instancia objetos das classes da API Zedgraph
@@ -17,6 +16,7 @@ namespace LabDS.View
         PointPairList listPointsPress = new PointPairList();
         LineItem myLineTemp;
         LineItem myLinePress;
+
         //criar evento para informar os subscritores que houve um click no botão iniciar
         public event EventHandler OnIniciar = null;
 
@@ -38,6 +38,10 @@ namespace LabDS.View
         //criar evento para informar os sbscritores que houve um click no botão SAIR
         public event EventHandler OnSair = null;
 
+        //criar evento para informar os subscritores que houve um click no botão Não
+        //da caixa de díalogo após exceção (não deseja continuar);
+        public event EventHandler OnNoButton = null;
+
         //iniciar a consola
         public Janela()
         {
@@ -55,7 +59,7 @@ namespace LabDS.View
             TempGraph.YAxis.Title.Text = "Graus (C)";
             TempGraph.YAxis.Scale.Min = 0;
             TempGraph.YAxis.Scale.Max = 40;
-            TempGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
+            //TempGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
             myLineTemp = TempGraph.AddCurve(null, listPointsTemp, Color.Red, SymbolType.Square);
             myLineTemp.Line.Width = 1;
         }
@@ -69,7 +73,7 @@ namespace LabDS.View
             PressGraph.YAxis.Title.Text = "hPa";
             PressGraph.YAxis.Scale.Min = 800;
             PressGraph.YAxis.Scale.Max = 1200;
-            PressGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
+            //PressGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
             myLinePress = PressGraph.AddCurve(null, listPointsPress, Color.Red, SymbolType.Square);
             myLinePress.Line.Width = 1;
         }
@@ -93,24 +97,25 @@ namespace LabDS.View
         //método que lança o evento da View de click no botão Iniciar
         private void Iniciar_Click(object sender, EventArgs e)
         {
-            iniciar.Enabled = false;
-            terminarDAQ.Enabled = true;
-            OnIniciar?.Invoke(sender, e);
+            try
+            {
+                OnIniciar?.Invoke(sender, e);
+            }
+            catch (ViewException)
+            {
+                ShowException("Não há portas COM disponíveis. \n Tentar de novo?\n");
+            } 
         }
 
         //método que lança o evento da View de click no botão iniciar receção de dados
         private void IniciarDAQ_Click(object sender, EventArgs e)
         {
-            iniciarDAQ.Enabled = false;
-            terminarDAQ.Enabled = true;
             OnIniciarDAQ?.Invoke(sender, e);
         }
 
         //método que lança o evento da View de click no botão terminar
         private void TerminarDAQ_Click(object sender, EventArgs e)
         {
-            iniciarDAQ.Enabled = true;
-            terminarDAQ.Enabled = false;
             OnTerminarDAQ?.Invoke(sender, e);
         }
 
@@ -251,6 +256,31 @@ namespace LabDS.View
                 UpdateGraphPress(Convert.ToDouble(x), press); //envia novo ponto para a View atualizar o gráfico
                 pressGrph.Refresh();
             }
+        }
+
+        public void ShowException(string message)
+        {
+            string title = "";
+            MessageBoxButtons buttons = MessageBoxButtons.YesNo;
+            DialogResult result = MessageBox.Show(message, title, buttons, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
+            if (result == DialogResult.No)
+            {
+                NoButtonEvent(null, EventArgs.Empty);
+            }
+        }
+
+        public void NoButtonEvent(object sender, EventArgs e)
+        {
+            OnNoButton?.Invoke(sender, e);
+        }
+    }
+
+    //classe que lida com as exceções apanhadas pelo Controller
+    public class ViewException : Exception
+    {
+        public ViewException()
+        {
+            //construtor
         }
     }
 }
