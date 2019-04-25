@@ -3,7 +3,6 @@ using System.Drawing;
 using System.Windows.Forms;
 using LabDS.Model;
 using ZedGraph;
-using LabDS.View;
 
 namespace LabDS.View
 {
@@ -38,10 +37,6 @@ namespace LabDS.View
         //criar evento para informar os sbscritores que houve um click no botão SAIR
         public event EventHandler OnSair = null;
 
-        //criar evento para informar os subscritores que houve um click no botão Não
-        //da caixa de díalogo após exceção (não deseja continuar);
-        public event EventHandler OnNoButton = null;
-
         //iniciar a consola
         public Janela()
         {
@@ -59,7 +54,6 @@ namespace LabDS.View
             TempGraph.YAxis.Title.Text = "Graus (C)";
             TempGraph.YAxis.Scale.Min = 0;
             TempGraph.YAxis.Scale.Max = 40;
-            //TempGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
             myLineTemp = TempGraph.AddCurve(null, listPointsTemp, Color.Red, SymbolType.Square);
             myLineTemp.Line.Width = 1;
         }
@@ -73,7 +67,6 @@ namespace LabDS.View
             PressGraph.YAxis.Title.Text = "hPa";
             PressGraph.YAxis.Scale.Min = 800;
             PressGraph.YAxis.Scale.Max = 1200;
-            //PressGraph.Chart.Fill = new Fill(Color.White, Color.LightBlue, 45.0f);
             myLinePress = PressGraph.AddCurve(null, listPointsPress, Color.Red, SymbolType.Square);
             myLinePress.Line.Width = 1;
         }
@@ -97,14 +90,30 @@ namespace LabDS.View
         //método que lança o evento da View de click no botão Iniciar
         private void Iniciar_Click(object sender, EventArgs e)
         {
-            try
+            //flag controla a saída do método que ocorre o método delegado terminar com sucesso ou
+            //se o utilizador escolher tentar de novo
+            bool flag = false;
+            do
             {
-                OnIniciar?.Invoke(sender, e);
-            }
-            catch (ViewException)
-            {
-                ShowException("Não há portas COM disponíveis. \n Tentar de novo?\n");
-            } 
+                try
+                {
+                    OnIniciar?.Invoke(sender, e);
+                    flag = true;
+                }
+                catch (ViewException)
+                {
+                    //executar se o utilizador escolhe Não na caixa de diálogo -> terminar execução
+                    if (!ShowException("Não há portas COM disponíveis. \n Tentar de novo?\n"))
+                    {
+                        Application.Exit();
+                    }
+                    //executar se o utilizador escolher Sim na caixa de diálogo -> sair do método e ficar na View para tentar de novo
+                    else
+                    {
+                        flag = true;
+                    }
+                }
+            } while (flag == false);
         }
 
         //método que lança o evento da View de click no botão iniciar receção de dados
@@ -258,20 +267,19 @@ namespace LabDS.View
             }
         }
 
-        public void ShowException(string message)
+        public bool ShowException(string message)
         {
             string title = "";
             MessageBoxButtons buttons = MessageBoxButtons.YesNo;
             DialogResult result = MessageBox.Show(message, title, buttons, MessageBoxIcon.Warning, MessageBoxDefaultButton.Button1);
-            if (result == DialogResult.No)
+            if (result == DialogResult.Yes)
             {
-                NoButtonEvent(null, EventArgs.Empty);
+                return true;
             }
-        }
-
-        public void NoButtonEvent(object sender, EventArgs e)
-        {
-            OnNoButton?.Invoke(sender, e);
+            else
+            {
+                return false;
+            }
         }
     }
 

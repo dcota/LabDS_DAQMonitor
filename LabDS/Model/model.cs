@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 
 namespace LabDS.Model   
 {
@@ -24,7 +23,7 @@ namespace LabDS.Model
 
         //declaração de variáveis
         private string dataReceived;
-        private string[] availableCOMS;
+        private string[] availableCOMs;
         private string selectedCOM;
         private string selectedBaudRate = " ";
         private int index;
@@ -41,10 +40,10 @@ namespace LabDS.Model
         }
 
         //método get/set para atualização das COM disponíveis
-        public string[] AvailableCOMS
+        public string[] AvailableCOMs
         {
-            get { return availableCOMS; }
-            set { availableCOMS = value; }
+            get { return availableCOMs; }
+            set { availableCOMs = value; }
         }
 
         //método get/set para atualização da COM selecionada
@@ -96,15 +95,6 @@ namespace LabDS.Model
             set { x = value; }
         }
 
-        //método para verificar se o vetor de portas COM está vazio
-        public void ChkAvailableCOMs(string[] avcoms)
-        {
-            if (avcoms.Length != 0)
-            {
-                AvailableCOMS = avcoms;
-            }
-        }
-
         //método para processar a string de dados
         public void ParseDados(string dadosRaw)
         {
@@ -149,14 +139,14 @@ namespace LabDS.Model
             }
         }
     }
-        //classe que notifica o Controller das exceções apanhadas pelo Model
-        public class ModelException : Exception
+
+    //classe que notifica o Controller das exceções apanhadas pelo Model
+    public class ModelException : Exception
+    {
+        public ModelException()
         {
-            public ModelException()
-            {
-                //construtor
-            }
+            //construtor
         }
-    
+    } 
 }
  

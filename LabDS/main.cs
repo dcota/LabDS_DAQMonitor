@@ -1,10 +1,8 @@
 ﻿using System;
-using System.Drawing;
 using System.Windows.Forms;
 using LabDS.View;
 using LabDS.Model;
 using System.IO.Ports;
-using System.ComponentModel;
 
 
 namespace LabDS
@@ -58,9 +56,6 @@ namespace LabDS
             //subscrever evento do Model quando nova string é processada, em nome da View 
             dados.StringParsed += monitor.UpdateView;
 
-            //subscrever evento da View quando utilizador escolhe não tentar de novo após exceção
-            monitor.OnNoButton += Sair;
-
             //lançar a aplicação (consola da View)
             Application.Run(monitor);
         }
@@ -69,16 +64,16 @@ namespace LabDS
         //iniciar clicado, gerado pela View - obtem as COM disponíveis, mostra na View e guarda no Model
         static void Start(object sender, EventArgs e)
         {
-            try
-            {
-                string[] avPorts = SerialPort.GetPortNames();
-                dados.ChkAvailableCOMs(avPorts);
-                monitor.com_box.Items.AddRange(dados.AvailableCOMS);
-            }
-            catch (ArgumentNullException)
+            string[] avPorts = SerialPort.GetPortNames();
+            if (avPorts.Length == 0)
             {
                 throw new ViewException();
-            }           
+            }
+            else
+            {
+                dados.AvailableCOMs = avPorts;
+                monitor.com_box.Items.AddRange(dados.AvailableCOMs);
+            }
         }
 
         //método invocado na subscrição do evento botão
@@ -123,21 +118,37 @@ namespace LabDS
         //iniciar DAQ clicado, gerado pela View - inicia as comunicações 
         static void StartDAQ(object sender, EventArgs e)
         {
-            try
-            {
-                if (!port.IsOpen)
+           //flag controla a saída do método que ocorre se a porta COM for aberta ou
+           //se o utilizador escolher tentar de novo
+           bool flag = false;
+           do
+           {
+                try
                 {
-                    port.Open();
-                    monitor.iniciarDAQ.Enabled = false;
-                    monitor.terminarDAQ.Enabled = true;
-                    monitor.reportBox.Text += "Porta COM aberta" + Environment.NewLine;
-                    monitor.reportBox.Text += "A receber dados..." + Environment.NewLine;
+                    if (!port.IsOpen)
+                    {
+                        port.Open();
+                        monitor.iniciarDAQ.Enabled = false;
+                        monitor.terminarDAQ.Enabled = true;
+                        monitor.reportBox.Text += "Porta COM aberta" + Environment.NewLine;
+                        monitor.reportBox.Text += "A receber dados..." + Environment.NewLine;
+                        flag = true;
+                    }
                 }
-            }
-            catch (System.IO.IOException)
-            {
-                monitor.ShowException("Não foi possível aceder à porta. \n Selecione porta COM. \nTentar novamente?");
-            }
+                catch (System.IO.IOException)
+                {
+                    //executar se o utilizador escolhe Não na caixa de diálogo -> terminar execução
+                    if (!monitor.ShowException("Não foi possível aceder à porta. \n Selecione porta COM. \nTentar novamente?"))
+                    {
+                        Application.Exit();
+                    }
+                    //executar se o utilizador escolher Sim na caixa de diálogo -> sair do método e ir para a View tentar de novo
+                    else
+                    {
+                        flag = true;
+                    }
+                }
+           } while (flag == false);
         }
 
         //método invocado na subscrição do evento caixa numérica up/down
@@ -151,16 +162,31 @@ namespace LabDS
         //recebe os dados e passa para o Model processar
         private static void OnDataReceived(object sender, SerialDataReceivedEventArgs e)
         {
-            try
+            //flag controla a saída do método que ocorre se o parse da string tiver sucesso ou
+            //se o utilizador escolher tentar de novo
+            bool flag = false;
+            do
             {
-                string dadosIn = port.ReadLine(); //recebe a string que chega via Serial Port
-                dados.ParseDados(dadosIn); //envia para o Model fazer parse da string
-            }
-            catch (ModelException)
-            {
-                //controller apanha a exceção do Model e ativa View
-                monitor.ShowException("Ocorreu um erro! \n Tentar de novo? \n");
-            }
+                try
+                {
+                    string dadosIn = port.ReadLine(); //recebe a string que chega via Serial Port
+                    dados.ParseDados(dadosIn); //envia para o Model fazer parse da string
+                    flag = true;
+                }
+                catch (ModelException)
+                {
+                    //executar se o utilizador escolhe Não na caixa de diálogo -> terminar execução
+                    if (!monitor.ShowException("Ocorreu um erro! \n Tentar de novo? \n"))
+                    {
+                        Application.Exit();
+                    }
+                    //executar se o utilizador escolher Sim na caixa de diálogo -> sair do método e tentar novo parse
+                    else
+                    {
+                        flag = true;
+                    }
+                }
+            } while (flag == false);
         }
     }
         //classe que notifica a View das exceções apanhadas pelo Controller
@@ -171,7 +197,4 @@ namespace LabDS
                 //construtor
             }
         }
-    
-
-    
 }
