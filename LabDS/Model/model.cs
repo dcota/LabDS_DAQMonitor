@@ -2,6 +2,73 @@
 
 namespace LabDS.Model   
 {
+    public interface IData
+    {
+        string Temp { get; set; }
+        string Press { get; set; }
+        double Time { get; set; }
+        void ParseString(string RawString);
+        event EventHandler<ParsedStringEventArgs> StringParsed;
+    }
+
+    public class Data : IData
+    {
+        //evento lançado sempre que nova string é processada
+        public event EventHandler<ParsedStringEventArgs> StringParsed = null;
+
+        //campos de dados locais
+        private string temp;
+        private string press;
+        private double time = -0.05;
+
+        //método get/set para atualização da temperatura
+        public string Temp
+        {
+            get { return temp; }
+            set { temp = value; }
+        }
+
+        //método get/set para atualização da pressão
+        public string Press
+        {
+            get { return press; }
+            set { press = value; }
+        }
+
+        //método get/set para atualização do tempo nos gráficos (eixo x)
+        public double Time
+        {
+            get { return time; }
+            set { time = value; }
+        }
+
+        public void ParseString(string RawString)
+        {
+            try
+            {
+                string[] dados = RawString.Split(';');
+                Temp  = dados[1];
+                Press = dados[2];
+                Time = Time + 0.05;
+                /*após processar cada string lançar evento para informar a View, através do
+                Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x*/
+                OnNewStringParsed(Temp, Press, Convert.ToString(Time));
+                //verificar o estado do alarme e informar a View, através do Controller
+            }
+            catch (IndexOutOfRangeException)
+            {
+                //apanha exceção no Model e alertar o Controller que vai ativar caixa de dialogo na View)
+                throw new ModelException();
+            }
+        }
+
+        public virtual void OnNewStringParsed(string temp, string press, string x)
+        {
+            StringParsed?.Invoke(this, new ParsedStringEventArgs(temp, press, x));
+        }
+    }
+
+    //classe que define os parâmetros a passar ao Controller em caso de evento de nova string processada
     public class ParsedStringEventArgs : EventArgs
     {
         public string[] NewStringParsed { get; set; }
@@ -10,7 +77,9 @@ namespace LabDS.Model
             NewStringParsed = args;
         }
     }
-    public class Dados
+
+    //classe com campos e métodos de parametrização da ligação ao DAQ e alarmes
+    public class Setup
     {
         //criar evento para informar a View, através do Controller de um alarme de temperatura
         public event EventHandler OnAlarm = null;
@@ -18,26 +87,11 @@ namespace LabDS.Model
         //criar evento para informar a View, através do Controller de que a temperatura normalizou
         public event EventHandler OnNoAlarm = null;
 
-        //criar evento para informar a View, através do Controller de que a string foi processada
-        public event EventHandler<ParsedStringEventArgs> StringParsed = null;
-
         //declaração de variáveis
-        private string dataReceived;
         private string[] availableCOMs;
         private string selectedCOM;
         private string selectedBaudRate = " ";
-        private int index;
-        private string temp;
-        private string press;
         private decimal spoint = 25;
-        double x = 0;
-
-        //método get;set para atualização da string de dados
-        public string DataReceived
-        {
-            get { return dataReceived; }
-            set { dataReceived = value; }
-        }
 
         //método get/set para atualização das COM disponíveis
         public string[] AvailableCOMs
@@ -60,27 +114,6 @@ namespace LabDS.Model
             set { selectedBaudRate = value; }
         }
 
-        //método get/set para atualização do índice da lista
-        public int Index
-        {
-            get { return index; }
-            set { index = value; }
-        }
-
-        //método get/set para atualização da temperatura
-        public string Temp
-        {
-            get { return temp; }
-            set { temp = value; }
-        }
-
-        //método get/set para atualização da pressão
-        public string Press
-        {
-            get { return press; }
-            set { press = value; }
-        }
-
         //método get/set para atualização do setpoint
         public decimal SPoint
         {
@@ -88,47 +121,11 @@ namespace LabDS.Model
             set { spoint = value; }
         }
 
-        //método get/set para atualização do valor de X (tempo) nos gráficos
-        public double X
-        {
-            get { return x; }
-            set { x = value; }
-        }
-
-        //método para processar a string de dados
-        public void ParseDados(string dadosRaw)
-        {
-            try
-            {
-                string[] dados = dadosRaw.Split(';');
-                Temp = dados[1];
-                Press = dados[2];
-                //após processar cada string lança evento para informar a View, através do
-                //Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x
-                OnNewStringParsed(Temp, Press, Convert.ToString(X));
-                //atualizar próximo valor de x (tempo)
-                X += 0.05;
-                //verificar o estado do alarme e informar a View, através do Controller
-                ChkAlarm(Temp);
-            }
-            catch (IndexOutOfRangeException)
-            {
-                //apanha exceção no Model e alertar o Controller que vai ativar caixa de dialogo na View)
-                throw new ModelException();
-            }
-        }
-
-        //método que lança evento de nova string 
-        public virtual void OnNewStringParsed(string temp, string press, string x)
-        {
-            StringParsed?.Invoke(this, new ParsedStringEventArgs(temp, press, x));
-        }
-
         //método para verificar de temperatura > setpoint
-        private void ChkAlarm(string temp)
+        public void ChkAlarm(string temp)
         {
-            //se o valor de temperatura é superior ao setpoint lançar evento Alarm, 
-            //se não lançar evento NoAlarm
+            /*se o valor de temperatura é superior ao setpoint lançar evento Alarm, 
+            se não lançar evento NoAlarm*/
             if (Convert.ToDouble(temp) > Convert.ToDouble(SPoint))
             {
                 OnAlarm?.Invoke(this, EventArgs.Empty);
