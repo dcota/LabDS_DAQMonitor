@@ -155,10 +155,11 @@ namespace LabDS.View
         //método invocado quando há um evento lançado pelo Model (novo par de pontos)
         public void UpdateView(object o, ParsedStringEventArgs e)
         {
-            ShowTemp(e.NewStringParsed[0]); 
-            ShowPress(e.NewStringParsed[1]);
-            TempPlot(e.NewStringParsed[2], e.NewStringParsed[0]); //atualiza o gráfico na View
-            PressPlot(e.NewStringParsed[2], e.NewStringParsed[1]); //atualiza o gráfico na View
+            string Time = Convert.ToString(e.NewStringParsed.Time); //converte double Time to string Time
+            ShowTemp(e.NewStringParsed.Temp); //atualiza caixa de texto de temperatura
+            ShowPress(e.NewStringParsed.Press); //atualiza a caixa de texto de pressão
+            TempPlot(Time, e.NewStringParsed.Temp); //atualiza o gráfico na View
+            PressPlot(Time, e.NewStringParsed.Press); //atualiza o gráfico na View
         }
 
         //método chamado aquando do evento do Model de alarme (temperatura>setpoint)

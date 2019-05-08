@@ -9,18 +9,18 @@ namespace LabDS
 {
     public class Program
     {
-        static Setup setup;
+        static Process process;
         static Janela monitor;
         static SerialPort port;
-        static Data data;
+        //static Data data;
 
         [STAThread]
         static void Main()
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            setup = new Setup();
-            data = new Data();
+            process = new Process();
+            //data = new Data();
             monitor = new Janela();
             port = new SerialPort();
 
@@ -50,13 +50,13 @@ namespace LabDS
             port.DataReceived += new SerialDataReceivedEventHandler(OnDataReceived);
 
             //subscrever evento do Model se deve haver alarme, em nome da View
-            setup.OnAlarm += monitor.Alarm;
+            process.OnAlarm += monitor.Alarm;
 
             //subscrever evento do Model se a temperatura é normal, em nome da View 
-            setup.OnNoAlarm += monitor.NoAlarm;
+            process.OnNoAlarm += monitor.NoAlarm;
 
             //subscrever evento do Model quando nova string é processada, em nome da View 
-            data.StringParsed += monitor.UpdateView;
+            process.StringParsed += monitor.UpdateView;
 
             //lançar a aplicação (consola da View)
             Application.Run(monitor);
@@ -73,8 +73,8 @@ namespace LabDS
             }
             else
             {
-                setup.AvailableCOMs = avPorts;
-                monitor.com_box.Items.AddRange(setup.AvailableCOMs);
+                process.AvailableCOMs = avPorts;
+                monitor.com_box.Items.AddRange(process.AvailableCOMs);
             }
         }
 
@@ -103,17 +103,17 @@ namespace LabDS
         static void SelectCOM(object sender, EventArgs e)
         {
             monitor.com_box.SelectedIndex = 0;
-            setup.SelectedCOM = monitor.com_box.Text;
-            port.PortName = setup.SelectedCOM;
-            monitor.reportBox.Text += "Porta selecionada: " + setup.SelectedCOM + Environment.NewLine;
+            process.SelectedCOM = monitor.com_box.Text;
+            port.PortName = process.SelectedCOM;
+            monitor.reportBox.Text += "Porta selecionada: " + process.SelectedCOM + Environment.NewLine;
         }
 
         //método invocado na subscrição do evento Baud Rate selecionada
         //, gerado pela View - guarda no Model o valor selecionado na View
         static void SelectBaudRate(object sender, EventArgs e)
         {
-            setup.SelectedBaudRate = monitor.baud_box.Text;
-            monitor.reportBox.Text += "Baud Rate: " + setup.SelectedBaudRate + Environment.NewLine;
+            process.SelectedBaudRate = monitor.baud_box.Text;
+            monitor.reportBox.Text += "Baud Rate: " + process.SelectedBaudRate + Environment.NewLine;
         }
 
         //método invocado na subscrição do evento botão 
@@ -157,7 +157,7 @@ namespace LabDS
         //gerado pela View - atualiza o valor de setpoint e guarda no Model
         static void ChangeSetPoint(object sender, EventArgs e)
         {
-            setup.SPoint = monitor.setpoint.Value;
+            process.SPoint = monitor.setpoint.Value;
         }
 
         //método invocado quando há um evento de input na Porta Serial
@@ -171,10 +171,9 @@ namespace LabDS
             {
                 try
                 {
-                    string newString = port.ReadLine(); //recebe a string que chega via Serial Port
-                    data.ParseString(newString); //envia para o Model fazer parse da string
-                    setup.ChkAlarm(data.Temp);
-                    flag = true;
+                   string newString = port.ReadLine();
+                   process.ParseString(newString);
+                   flag = true;
                 }
                 catch (ModelException)
                 {

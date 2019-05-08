@@ -2,24 +2,12 @@
 
 namespace LabDS.Model   
 {
-    public interface IData
-    {
-        string Temp { get; set; }
-        string Press { get; set; }
-        double Time { get; set; }
-        void ParseString(string RawString);
-        event EventHandler<ParsedStringEventArgs> StringParsed;
-    }
-
     public class Data : IData
-    {
-        //evento lançado sempre que nova string é processada
-        public event EventHandler<ParsedStringEventArgs> StringParsed = null;
-
+    { 
         //campos de dados locais
         private string temp;
         private string press;
-        private double time = -0.05;
+        private double time = 0;
 
         //método get/set para atualização da temperatura
         public string Temp
@@ -41,19 +29,52 @@ namespace LabDS.Model
             get { return time; }
             set { time = value; }
         }
+    }
 
+    //classe que define os parâmetros a passar em caso de evento de nova string processada
+    public class ParsedStringEventArgs : EventArgs
+    {
+        public IData NewStringParsed { get; set; }
+        public ParsedStringEventArgs(IData args)
+        {
+            NewStringParsed = args;
+        }
+    }
+
+    //classe com campos e métodos de parametrização da ligação ao DAQ e alarmes
+    public class Process
+    {
+        Data data = new Data();
+
+        //criar evento para informar a View, através do Controller de um alarme de temperatura
+        public event EventHandler OnAlarm = null;
+
+        //criar evento para informar a View, através do Controller de que a temperatura normalizou
+        public event EventHandler OnNoAlarm = null;
+
+        //evento lançado sempre que nova string é processada
+        public event EventHandler<ParsedStringEventArgs> StringParsed = null;
+
+        //declaração de variáveis
+        private string[] availableCOMs;
+        private string selectedCOM;
+        private string selectedBaudRate = " ";
+        private decimal spoint = 25;
+
+        //método para processar cadaa string
         public void ParseString(string RawString)
         {
             try
             {
-                string[] dados = RawString.Split(';');
-                Temp  = dados[1];
-                Press = dados[2];
-                Time = Time + 0.05;
+                string[] dataSplited = RawString.Split(';');
+                data.Temp = dataSplited[1];
+                data.Press = dataSplited[2];
                 /*após processar cada string lançar evento para informar a View, através do
                 Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x*/
-                OnNewStringParsed(Temp, Press, Convert.ToString(Time));
+                OnNewStringParsed(data);
+                data.Time = data.Time + 0.05; // set próximo instante de tempo
                 //verificar o estado do alarme e informar a View, através do Controller
+                ChkAlarm(data.Temp);
             }
             catch (IndexOutOfRangeException)
             {
@@ -62,36 +83,11 @@ namespace LabDS.Model
             }
         }
 
-        public virtual void OnNewStringParsed(string temp, string press, string x)
+        public virtual void OnNewStringParsed(IData data)
         {
-            StringParsed?.Invoke(this, new ParsedStringEventArgs(temp, press, x));
+            StringParsed?.Invoke(this, new ParsedStringEventArgs(data));
         }
-    }
 
-    //classe que define os parâmetros a passar ao Controller em caso de evento de nova string processada
-    public class ParsedStringEventArgs : EventArgs
-    {
-        public string[] NewStringParsed { get; set; }
-        public ParsedStringEventArgs(params string[] args)
-        {
-            NewStringParsed = args;
-        }
-    }
-
-    //classe com campos e métodos de parametrização da ligação ao DAQ e alarmes
-    public class Setup
-    {
-        //criar evento para informar a View, através do Controller de um alarme de temperatura
-        public event EventHandler OnAlarm = null;
-
-        //criar evento para informar a View, através do Controller de que a temperatura normalizou
-        public event EventHandler OnNoAlarm = null;
-
-        //declaração de variáveis
-        private string[] availableCOMs;
-        private string selectedCOM;
-        private string selectedBaudRate = " ";
-        private decimal spoint = 25;
 
         //método get/set para atualização das COM disponíveis
         public string[] AvailableCOMs
