@@ -51,7 +51,7 @@ namespace LabDS.View
             TempGraph = tempGrph.GraphPane;
             TempGraph.Title.Text = "Temperatura (t)";
             TempGraph.XAxis.Title.Text = "Tempo (s)";
-            TempGraph.YAxis.Title.Text = "Graus (C)";
+            TempGraph.YAxis.Title.Text = "°C";
             TempGraph.YAxis.Scale.Min = 0;
             TempGraph.YAxis.Scale.Max = 40;
             myLineTemp = TempGraph.AddCurve(null, listPointsTemp, Color.Red, SymbolType.Square);
@@ -160,6 +160,12 @@ namespace LabDS.View
             ShowPress(e.NewStringParsed.Press); //atualiza a caixa de texto de pressão
             TempPlot(Time, e.NewStringParsed.Temp); //atualiza o gráfico na View
             PressPlot(Time, e.NewStringParsed.Press); //atualiza o gráfico na View
+        }
+
+        public void ShowAverages(IData data2)
+        {
+            string Media = Convert.ToString(Math.Round(Convert.ToDouble(data2.AvTemp), 2, MidpointRounding.AwayFromZero));
+            MessageBox.Show("Media de temperaturas recebidas: " + Media + "°C");
         }
 
         //método chamado aquando do evento do Model de alarme (temperatura>setpoint)

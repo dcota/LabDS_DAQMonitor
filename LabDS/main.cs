@@ -12,7 +12,6 @@ namespace LabDS
         static Process process;
         static Janela monitor;
         static SerialPort port;
-        //static Data data;
 
         [STAThread]
         static void Main()
@@ -20,7 +19,6 @@ namespace LabDS
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             process = new Process();
-            //data = new Data();
             monitor = new Janela();
             port = new SerialPort();
 
@@ -82,12 +80,15 @@ namespace LabDS
         //terminar clicado, gerado pela View - encerra comunicações
         static void CloseDAQ(object sender, EventArgs e)
         {
+            LabDS.Model.IData data2 = process.GetIDataObject();
+
             if (port.IsOpen)
             {
                 port.Close();
                 monitor.iniciarDAQ.Enabled = true;
                 monitor.terminarDAQ.Enabled = false;
                 monitor.reportBox.Text += "Porta COM fechada" + Environment.NewLine;
+                monitor.ShowAverages(data2);
             }
         }
 
@@ -199,4 +200,5 @@ namespace LabDS
             //construtor
         }
     }
+
 }

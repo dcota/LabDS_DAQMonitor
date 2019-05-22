@@ -11,5 +11,8 @@ namespace LabDS.Model
         string Temp { get; set; }
         string Press { get; set; }
         double Time { get; set; }
+        double AvTemp { get; set; }
+        double AddTempValues { get; set; }
+        void UpdateMediaTemp(double temp, int counter);
     }
 }
