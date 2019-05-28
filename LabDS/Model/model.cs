@@ -10,8 +10,10 @@ namespace LabDS.Model
         private string temp;
         private string press;
         private double time = 0;
-        private double avtemp = 0;
-        private double somaTemp = 0;
+        private double avTemp = 0;
+        private double avPress = 0;
+        private double sumTemp = 0;
+        private double sumPress = 0;
 
 
         //método get/set para atualização da temperatura
@@ -38,85 +40,46 @@ namespace LabDS.Model
         //método get/set para atualização da soma de temperaturas
         public double AddTempValues
         {
-            get { return somaTemp; }
-            set { somaTemp = value; }
+            get { return sumTemp; }
+            set { sumTemp = value; }
+        }
+
+        //método get/set para atualização da soma de pressões
+        public double AddPressValues
+        {
+            get { return sumPress; }
+            set { sumPress = value; }
         }
 
         //método get/set para atualização da média das temperaturas
         public double AvTemp
         {
-            get { return avtemp; }
-            set { avtemp = value; }
-        }
-
-        public void UpdateMediaTemp(double temp, int counter)
-        {
-            AddTempValues += temp;
-            AvTemp = AddTempValues / counter;
-        }
-    }
-
-    public class Data2 : IData
-    {
-        //campos de dados locais
-        private string temp;
-        private string press;
-        private double time = 0;
-        private double avtemp = 0;
-        private double somaTemp = 0;
-
-
-        //método get/set para atualização da temperatura
-        public string Temp
-        {
-            get { return temp; }
-            set { temp = value; }
-        }
-
-        //método get/set para atualização da pressão
-        public string Press
-        {
-            get { return press; }
-            set { press = value; }
-        }
-
-        //método get/set para atualização do tempo nos gráficos (eixo x)
-        public double Time
-        {
-            get { return time; }
-            set { time = value; }
-        }
-
-        //método get/set para atualização da soma de temperaturas
-        public double AddTempValues
-        {
-            get { return somaTemp; }
-            set { somaTemp = value; }
+            get { return avTemp; }
+            set { avTemp = value; }
         }
 
         //método get/set para atualização da média das temperaturas
-        public double AvTemp
+        public double AvPress
         {
-            get { return avtemp; }
-            set { avtemp = value; }
+            get { return avPress; }
+            set { avPress = value; }
         }
 
-        public void UpdateMediaTemp(double temp, int counter)
+        //método para atualização da média da temperatura
+        public void UpdateAverageTemp(double temp, int counter)
         {
             AddTempValues += temp;
             AvTemp = AddTempValues / counter;
         }
-    }
 
-    //classe que define os parâmetros a passar em caso de evento de nova string processada
-    public class ParsedStringEventArgs : EventArgs
-    {
-        public IData NewStringParsed { get; set; }
-        public ParsedStringEventArgs(IData args)
+        //método para atualização da média da pressão
+        public void UpdateAveragePress(double press, int counter)
         {
-            NewStringParsed = args;
+            AddPressValues += press;
+            AvPress = AddPressValues / counter;
         }
     }
+    
 
     //classe com campos e métodos de parametrização da ligação ao DAQ e alarmes
     public class Process
@@ -139,12 +102,11 @@ namespace LabDS.Model
 
         //criar objeto da classe Data
         Data data = new Data();
-        Data2 data2 = new Data2();
 
         //método que retorna o objeto de IData para o Controller passar para a View
         public IData GetIDataObject()
         {
-            return data2;
+            return data;
         }
 
         //método para processar cada string recebida do DAQ
@@ -162,8 +124,9 @@ namespace LabDS.Model
                 data.Time = data.Time + 0.05;
                 //incrementa o contador de valores para efeito do calculo dás médias
                 counter++;
-                //atualiza a média de temperatura utilizando o objeto da classe Data2
-                data2.UpdateMediaTemp(Math.Round(Convert.ToDouble(data.Temp), 2, MidpointRounding.AwayFromZero), counter);
+                //atualiza a média dos valores
+                data.UpdateAverageTemp(Math.Round(Convert.ToDouble(data.Temp), 2, MidpointRounding.AwayFromZero), counter);
+                data.UpdateAveragePress(Math.Round(Convert.ToDouble(data.Press), 2, MidpointRounding.AwayFromZero), counter);
                 //verificar o estado do alarme e informar a View, através do Controller
                 ChkAlarm(data.Temp);
             }
@@ -221,6 +184,16 @@ namespace LabDS.Model
             {
                 OnNoAlarm?.Invoke(this, EventArgs.Empty);
             }
+        }
+    }
+
+    //classe que define os parâmetros a passar em caso de evento de nova string processada
+    public class ParsedStringEventArgs : EventArgs
+    {
+        public IData NewStringParsed { get; set; }
+        public ParsedStringEventArgs(IData args)
+        {
+            NewStringParsed = args;
         }
     }
 

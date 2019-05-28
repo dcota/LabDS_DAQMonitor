@@ -80,7 +80,7 @@ namespace LabDS
         //terminar clicado, gerado pela View - encerra comunicações
         static void CloseDAQ(object sender, EventArgs e)
         {
-            LabDS.Model.IData data2 = process.GetIDataObject();
+            LabDS.Model.IData data = process.GetIDataObject();
 
             if (port.IsOpen)
             {
@@ -88,7 +88,7 @@ namespace LabDS
                 monitor.iniciarDAQ.Enabled = true;
                 monitor.terminarDAQ.Enabled = false;
                 monitor.reportBox.Text += "Porta COM fechada" + Environment.NewLine;
-                monitor.ShowAverages(data2);
+                monitor.ShowAverages(data);
             }
         }
 

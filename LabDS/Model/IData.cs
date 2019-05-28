@@ -12,7 +12,10 @@ namespace LabDS.Model
         string Press { get; set; }
         double Time { get; set; }
         double AvTemp { get; set; }
+        double AvPress { get; set; }
         double AddTempValues { get; set; }
-        void UpdateMediaTemp(double temp, int counter);
+        double AddPressValues { get; set; }
+        void UpdateAverageTemp(double temp, int counter);
+        void UpdateAveragePress(double press, int counter);
     }
 }

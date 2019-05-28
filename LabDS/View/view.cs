@@ -162,10 +162,19 @@ namespace LabDS.View
             PressPlot(Time, e.NewStringParsed.Press); //atualiza o gráfico na View
         }
 
-        public void ShowAverages(IData data2)
+        //método invocado no evento OnTerminar para mostrar médias finais dos valores recebidos
+        public void ShowAverages(IData data)
         {
-            string Media = Convert.ToString(Math.Round(Convert.ToDouble(data2.AvTemp), 2, MidpointRounding.AwayFromZero));
-            MessageBox.Show("Media de temperaturas recebidas: " + Media + "°C");
+            string AverageTemp = ConvertFromDouble(data.AvTemp);
+            string AveragePress = ConvertFromDouble(data.AvPress);
+            MessageBox.Show("Média da temperatura do ar: " + AverageTemp + "°C" + Environment.NewLine +
+                "Média da pressão atmosférica: " + AveragePress + "hPa");
+        }
+
+        //método para converter em string os valores recebidos em double
+        public string ConvertFromDouble(double value)
+        {
+            return Convert.ToString(Math.Round(Convert.ToDouble(value), 2, MidpointRounding.AwayFromZero));
         }
 
         //método chamado aquando do evento do Model de alarme (temperatura>setpoint)
