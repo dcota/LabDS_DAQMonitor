@@ -1,6 +1,12 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿/********************************************************
+ * UC 21179 - Laboratório de Desenvolvimento de Software 
+ * Ano letivo: 2018/2019                                 
+ * Ficheiro: model.cs
+ * Autor: Duarte Cota
+ * Descrição: Componente MODEL da aplicação DAQ Monitor
+ *******************************************************/
+
+using System;
 
 namespace LabDS.Model   
 {
@@ -14,7 +20,6 @@ namespace LabDS.Model
         private double avPress = 0;
         private double sumTemp = 0;
         private double sumPress = 0;
-
 
         //método get/set para atualização da temperatura
         public string Temp
@@ -80,7 +85,6 @@ namespace LabDS.Model
         }
     }
     
-
     //classe com campos e métodos de parametrização da ligação ao DAQ e alarmes
     public class Process
     {
@@ -91,7 +95,7 @@ namespace LabDS.Model
         public event EventHandler OnNoAlarm = null;
 
         //evento lançado sempre que nova string é processada
-        public event EventHandler<ParsedStringEventArgs> StringParsed = null;
+        public event EventHandler<ParsedStringEventArgs> OnNewStringParsed = null;
 
         //declaração de variáveis
         private string[] availableCOMs;
@@ -100,10 +104,10 @@ namespace LabDS.Model
         private decimal spoint = 25;
         int counter = 0;
 
-        //criar objeto da classe Data
+        //criar objeto da classe Data que implementa IData
         Data data = new Data();
 
-        //método que retorna o objeto de IData para o Controller passar para a View
+        //método que retorna o objeto de IData para o Controller à View
         public IData GetIDataObject()
         {
             return data;
@@ -118,13 +122,13 @@ namespace LabDS.Model
                 data.Temp = dataSplited[1];
                 data.Press = dataSplited[2];
                 /*após processar cada string lançar evento para informar a View, através do
-                Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x*/
-                OnNewStringParsed(data);
-                // set próximo instante de tempo
+                Controller, de que há novos valores de temperatura e pressão para um novo instante de tempo x */
+                StringParsed(data);
+                // set do próximo instante de tempo
                 data.Time = data.Time + 0.05;
-                //incrementa o contador de valores para efeito do calculo dás médias
+                //incrementar o contador de valores para efeito do calculo das médias
                 counter++;
-                //atualiza a média dos valores
+                //atualizar a média dos valores
                 data.UpdateAverageTemp(Math.Round(Convert.ToDouble(data.Temp), 2, MidpointRounding.AwayFromZero), counter);
                 data.UpdateAveragePress(Math.Round(Convert.ToDouble(data.Press), 2, MidpointRounding.AwayFromZero), counter);
                 //verificar o estado do alarme e informar a View, através do Controller
@@ -132,14 +136,15 @@ namespace LabDS.Model
             }
             catch (IndexOutOfRangeException)
             {
-                //apanha exceção no Model e alertar o Controller que vai ativar caixa de dialogo na View)
+                //apanhar exceção no Model e alertar o Controller que vai ativar caixa de dialogo na View)
                 throw new ModelException();
             }
         }
         
-        public virtual void OnNewStringParsed(IData data)
+        //método invocado sempre que uma nova string é processada
+        public virtual void StringParsed(IData data)
         {
-            StringParsed?.Invoke(this, new ParsedStringEventArgs(data));
+            OnNewStringParsed?.Invoke(this, new ParsedStringEventArgs(data));
         }
 
 
@@ -171,12 +176,12 @@ namespace LabDS.Model
             set { spoint = value; }
         }
 
-        //método para verificar de temperatura > setpoint
+        //método para verificar de temperatura >= setpoint
         public void ChkAlarm(string temp)
         {
             /*se o valor de temperatura é superior ao setpoint lançar evento Alarm, 
             se não lançar evento NoAlarm*/
-            if (Convert.ToDouble(temp) > Convert.ToDouble(SPoint))
+            if (Convert.ToDouble(temp) >= Convert.ToDouble(SPoint))
             {
                 OnAlarm?.Invoke(this, EventArgs.Empty);
             }
@@ -206,4 +211,3 @@ namespace LabDS.Model
         }
     } 
 }
- 

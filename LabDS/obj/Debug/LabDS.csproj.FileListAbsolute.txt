@@ -49,3 +49,4 @@ C:\Users\Utilizador\OneDrive - UAb\lds\labDS\LabDS\obj\Debug\LabDS.csproj.CoreCo
 C:\Users\Utilizador\OneDrive - UAb\lds\labDS\LabDS\obj\Debug\LabDS.csproj.CopyComplete
 C:\Users\Utilizador\OneDrive - UAb\lds\labDS\LabDS\obj\Debug\LabDS.exe
 C:\Users\Utilizador\OneDrive - UAb\lds\labDS\LabDS\obj\Debug\LabDS.pdb
+C:\Users\Utilizador\OneDrive - UAb\lds\labDS\LabDS\obj\Debug\LabDS.csprojAssemblyReference.cache

@@ -1,4 +1,12 @@
-﻿using System;
+﻿/********************************************************
+ * UC 21179 - Laboratório de Desenvolvimento de Software 
+ * Ano letivo: 2018/2019                                 
+ * Ficheiro: view.cs
+ * Autor: Duarte Cota
+ * Descrição: Componente VIEW da aplicação DAQ Monitor
+ *******************************************************/
+
+using System;
 using System.Drawing;
 using System.Windows.Forms;
 using LabDS.Model;
@@ -8,7 +16,7 @@ namespace LabDS.View
 {
     public partial class Janela: Form
     {
-        //instancia objetos das classes da API Zedgraph
+        //instanciar objetos das classes da API Zedgraph
         GraphPane TempGraph = new GraphPane();
         GraphPane PressGraph = new GraphPane();
         PointPairList listPointsTemp = new PointPairList();
@@ -16,25 +24,26 @@ namespace LabDS.View
         LineItem myLineTemp;
         LineItem myLinePress;
 
-        //criar evento para informar os subscritores que houve um click no botão iniciar
+        //criar evento para informar a View de que houve um click no botão "Obter COM's disponíveis"
         public event EventHandler OnIniciar = null;
 
-        //criar evento para informar os subscritores que houve um click no botão terminar
-        public event EventHandler OnTerminarDAQ = null;
-
-        //criar evento para informar os subscritores que houve uma seleção de COM
+        //criar evento para informar a View de que houve uma seleção de COM
         public event EventHandler OnSelectCOM = null;
 
-        //criar evento para informar os subscritores que houve uma seleção de COM
+        //criar evento para informar a View de que houve uma seleção de COM
         public event EventHandler OnSelectBaudRate = null;
 
-        //criar evento para informar os subscritores que houve uma seleção de COM
+
+        //criar evento para informar a View de que houve uma seleção de COM
         public event EventHandler OnIniciarDAQ = null;
 
-        //criar evento para informar os subscritores que houve uma alteração no setpoint
+        //criar evento para informar a View de que houve um click no botão terminar
+        public event EventHandler OnTerminarDAQ = null;
+
+        //criar evento para informar a View deque houve uma alteração no setpoint
         public event EventHandler OnSetPoint = null;
 
-        //criar evento para informar os sbscritores que houve um click no botão SAIR
+        //criar evento para informar a View de que houve um click no botão SAIR
         public event EventHandler OnSair = null;
 
         //iniciar a consola
@@ -116,6 +125,17 @@ namespace LabDS.View
             } while (flag == false);
         }
 
+        //método que lança o evento da View de seleção da porta COM
+        private void Com_box_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            OnSelectCOM?.Invoke(sender, e);
+        }
+
+        //método que lança o evento da View de seleção do baud rate
+        private void OnSelectBaudRateEvent(object sender, EventArgs e)
+        {
+            OnSelectBaudRate?.Invoke(sender, e);
+        }
         //método que lança o evento da View de click no botão iniciar receção de dados
         private void IniciarDAQ_Click(object sender, EventArgs e)
         {
@@ -126,18 +146,6 @@ namespace LabDS.View
         private void TerminarDAQ_Click(object sender, EventArgs e)
         {
             OnTerminarDAQ?.Invoke(sender, e);
-        }
-
-        //método que lança o evento da View de seleção do baud rate
-        private void OnSelectBaudRateEvent(object sender, EventArgs e)
-        {
-            OnSelectBaudRate?.Invoke(sender, e);
-        }
-
-        //método que lança o evento da View de seleção da porta COM
-        private void Com_box_SelectedIndexChanged(object sender, EventArgs e)
-        {
-            OnSelectCOM?.Invoke(sender, e);
         }
 
         //método que lança o evento da View de alteração do setpoint
@@ -171,19 +179,19 @@ namespace LabDS.View
                 "Média da pressão atmosférica: " + AveragePress + "hPa");
         }
 
-        //método para converter em string os valores recebidos em double
+        //método para converter para string os valores recebidos do tipo double
         public string ConvertFromDouble(double value)
         {
             return Convert.ToString(Math.Round(Convert.ToDouble(value), 2, MidpointRounding.AwayFromZero));
         }
 
-        //método chamado aquando do evento do Model de alarme (temperatura>setpoint)
+        //método chamado aquando do evento do Model -> alarme (temperatura>setpoint)
         public void Alarm(object sender, EventArgs e)
         {
             UpdateAlarm();
         }
 
-        //método chamado aquando do evento do Model de fim de alarme
+        //método chamado aquando do evento do Model -> fim de alarme
         public void NoAlarm(object sender, EventArgs e)
         {
             UpdateNoAlarm();

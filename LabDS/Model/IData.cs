@@ -1,8 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿/********************************************************
+ * UC 21179 - Laboratório de Desenvolvimento de Software 
+ * Ano letivo: 2018/2019                                 
+ * Ficheiro: IData.cs
+ * Autor: Duarte Cota
+ * Descrição: Definição da Interface IData
+ *******************************************************/
+
 
 namespace LabDS.Model
 {
